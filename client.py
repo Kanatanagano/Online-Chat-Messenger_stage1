@@ -1,30 +1,24 @@
 import socket
-import sys
 
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-server_address = '/socket_file'
-print('connecting to {}'.format(server_address))
+class ChatClient:
+    def __init__(self, host, port):
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.server_address = (host, port)
+        self.username = input("Enter your username: ")
 
-try:
-    sock.connect(server_address)
-except socket.error as err:
-    print('socket error: {}'.format(err))
-    sys.exit(1)
+    def send_message(self, message):
+        encoded_message = bytes([len(self.username)]) + self.username.encode('utf-8') + message.encode('utf-8')
+        self.client_socket.sendto(encoded_message, self.server_address)
 
-try:
-    message = b'Sending a message to the server side'
-    sock.sendall(message)
-    sock.settimeout(2)
-
-    try:
+    def start(self):
+        print("Chat client is running...")
         while True:
-            data = sock.recv(32)
-            if data:
-                print('received {}'.format(data))
-            else:
-                break
-    except(TimeoutError):
-        print('timeout error')
-finally:
-    print('closing socket')
-    sock.close()
+            user_message = input("Enter your message: ")
+            self.send_message(user_message)
+
+if __name__ == "__main__":
+    client = ChatClient('127.0.0.1', 12345)
+    client.start()
+
+
+    
